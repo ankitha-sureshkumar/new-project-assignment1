@@ -1,8 +1,7 @@
-import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../axiosConfig';
-import React, { useEffect, useState } from 'react';
 import { DayPilot, DayPilotCalendar, DayPilotNavigator } from "@daypilot/daypilot-lite-react";
+import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+
 
 const overlayStyle = {
     position: 'fixed',
@@ -49,8 +48,6 @@ const buttonStyle = {
     cursor: 'pointer'
 };
 
-
-
 const styles = {
     wrap: {
         display: "flex"
@@ -64,6 +61,7 @@ const styles = {
 };
 
 const Calendar = () => {
+    const { user } = useAuth(); // Access user token from context
     const today = new Date()
     const [calendar, setCalendar] = useState(null);
     const [events, setEvents] = useState([]);
@@ -90,7 +88,12 @@ const Calendar = () => {
             setFormVisible(true);
         },
         onEventClick: async args => {
-            await editEvent(args.e);
+            // Only allow edit for certain roles
+            if (user && ["manager"].includes(user.role)) {
+                await editEvent(args.e);
+            } else {
+                alert("You do not have permission to edit events.");
+            }
         },
         contextMenu: new DayPilot.Menu({
             items: [
@@ -142,6 +145,11 @@ const Calendar = () => {
     };
 
     const editEvent = async (e) => {
+        // Only allow certain roles to edit
+        if (!user && user.role === "manager") {
+            alert("You do not have permission to edit events.");
+            return;
+        }
         const modal = await DayPilot.Modal.prompt("Update event text:", e.text());
         if (!modal.result) { return; }
         e.data.text = modal.result;
@@ -183,7 +191,7 @@ const Calendar = () => {
 
     return (
         <div>
-            {formVisible && (
+            {formVisible && user && user.role === "manager" && (
                 <div style={overlayStyle}>
                     <div style={modalStyle}>
                         <h3 style={{ marginBottom: '1rem' }}>Create Event</h3>
