@@ -81,6 +81,15 @@ const Calendar = () => {
     });
     const [shifts, setShifts] = useState([]);
 
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [editFormData, setEditFormData] = useState({
+        id: '',
+        person: '',
+        start: '',
+        end: ''
+    });
+
+
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -109,19 +118,6 @@ const Calendar = () => {
         viewType: "Week",
         durationBarVisible: false,
         timeRangeSelectedHandling: "Enabled",
-        //  onTimeRangeSelected: async args => {
-        /* const modal = await DayPilot.Modal.prompt("Create a new shift:", "shift 1");
-          calendar.clearSelection();
-          if (!modal.result) { return; }
-          calendar.shifts.add({
-            start: args.start,
-            end: args.end,
-            id: DayPilot.guid(),
-            text: modal.result
-          }); */
-        //    setSelectedTimeRange({ start: args.start, end: args.end });
-        //  setFormVisible(true);
-        // },
         onEventClick: async args => {
             // Only allow edit for certain roles
             if (user && ["manager"].includes(user.role)) {
@@ -185,30 +181,20 @@ const Calendar = () => {
 
     const editShift = async (e) => {
         if (!user || user.role !== "manager") {
-            alert("You do not have permission to edit Shifts.");
+            alert("You do not have permission to edit shifts.");
             return;
         }
 
-        const modal = await DayPilot.Modal.prompt("Update name for this Shift:", e.data.text);
-        if (!modal.result) return;
+        setEditFormData({
+            id: e.data.id,
+            person: e.data.text,
+            start: e.data.start.slice(0, 16),
+            end: e.data.end.slice(0, 16),
+        });
 
-        try {
-            await axiosInstance.put(`/api/shifts/${e.data.id}`, {
-                person: modal.result,
-                start: e.data.start,
-                end: e.data.end,
-            }, {
-                headers: {
-                    Authorization: `Bearer ${user.token}`
-                }
-            });
-            console.log("Updating shift ID:", e.data.id);
-            fetchShifts(); // Refresh updated calendar
-        } catch (error) {
-            console.error("Failed to update shift:", error);
-            alert("Failed to update shift.");
-        }
+        setEditModalVisible(true);
     };
+
 
 
     const deleteShift = async (shiftId) => {
@@ -245,7 +231,7 @@ const Calendar = () => {
                     text: ev.person || "Untitled Shift",
                     start: ev.start, // remove milliseconds + Z
                     end: ev.end,
-                    backColor: "#6aa84f" // Optional: add if you want color
+                    backColor: "#6aa84f"
                 };
             });
 
@@ -257,13 +243,88 @@ const Calendar = () => {
         }
     };
 
-
     useEffect(() => {
         fetchShifts();
     }, []);
 
     return (
         <div>
+            {editModalVisible && (
+                <div style={overlayStyle}>
+                    <div style={{ ...modalStyle, width: '350px' }}>
+                        <h3 style={{ marginBottom: '1rem' }}>Edit Shift</h3>
+
+                        <label style={labelStyle}>
+                            Person:
+                            <input
+                                type="text"
+                                value={editFormData.person}
+                                onChange={(e) => setEditFormData({ ...editFormData, person: e.target.value })}
+                                style={inputStyle}
+                            />
+                        </label>
+
+                        <label style={labelStyle}>
+                            Start:
+                            <input
+                                type="datetime-local"
+                                value={editFormData.start}
+                                onChange={(e) => setEditFormData({ ...editFormData, start: e.target.value })}
+                                style={inputStyle}
+                            />
+                        </label>
+
+                        <label style={labelStyle}>
+                            End:
+                            <input
+                                type="datetime-local"
+                                value={editFormData.end}
+                                onChange={(e) => setEditFormData({ ...editFormData, end: e.target.value })}
+                                style={inputStyle}
+                            />
+                        </label>
+
+                        <div style={{ marginTop: '1rem' }}>
+                            <button
+                                style={buttonStyle}
+                                onClick={async () => {
+                                    if (!editFormData.person || !editFormData.start || !editFormData.end) {
+                                        alert("Please fill in all fields.");
+                                        return;
+                                    }
+
+                                    try {
+                                        await axiosInstance.put(`/api/shifts/${editFormData.id}`, {
+                                            person: editFormData.person,
+                                            start: toUtcISOString(editFormData.start),
+                                            end: toUtcISOString(editFormData.end),
+                                        }, {
+                                            headers: {
+                                                Authorization: `Bearer ${user.token}`
+                                            }
+                                        });
+
+                                        setEditModalVisible(false);
+                                        fetchShifts();
+                                    } catch (error) {
+                                        alert("Failed to update shift.");
+                                        console.error(error);
+                                    }
+                                }}
+                            >
+                                Update
+                            </button>
+                            <button
+                                style={{ ...buttonStyle, marginLeft: '10px', backgroundColor: '#ccc' }}
+                                onClick={() => setEditModalVisible(false)}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {formVisible && user && user.role === "manager" && (
                 <div style={overlayStyle}>
                     <div style={modalStyle}>
