@@ -63,10 +63,10 @@ const styles = {
 
 const Calendar = () => {
     const toUtcISOString = (localDateTimeString) => {
-  const localDate = new Date(localDateTimeString);
-  const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000);
-  return utcDate.toISOString();
-};
+        const localDate = new Date(localDateTimeString);
+        const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000);
+        return utcDate.toISOString();
+    };
 
     const { user, setUser } = useAuth(); // Access user token from context
     const today = new Date()
@@ -136,7 +136,10 @@ const Calendar = () => {
                 {
                     text: "Delete",
                     onClick: async args => {
-                        calendar.events.remove(args.source);
+                        const confirmed = window.confirm("Are you sure you want to delete this event?");
+                        if (!confirmed) return;
+
+                        await deleteEvent(args.source.data.id); // call your new deleteEvent function
                     },
                 },
                 {
@@ -190,6 +193,23 @@ const Calendar = () => {
         if (!modal.result) { return; }
         e.data.text = modal.result;
         calendar.events.update(e);
+    };
+
+
+    const deleteEvent = async (eventId) => {
+        if (!user || user.role !== "manager") {
+            alert("You do not have permission to delete events.");
+            return;
+        }
+        try {
+            await axiosInstance.delete(`/api/events/${eventId}`, {
+                headers: { Authorization: `Bearer ${user.token}` },
+            });
+            fetchEvents(); // Refresh events after deletion
+        } catch (error) {
+            console.error("Failed to delete event:", error);
+            alert('Failed to delete event. Please try again.');
+        }
     };
 
     const fetchEvents = async () => {
@@ -266,12 +286,6 @@ const Calendar = () => {
 
                         <div style={{ marginTop: '1rem' }}>
                             <button style={buttonStyle} onClick={async () => {
-                                // 🛑 Add this block first
-                                console.log("Person:", formData.person);
-                                console.log("Start:", formData.start);
-                                console.log("End:", formData.end);
-                                console.log("Raw input:", formData.start);
-                                console.log("Converted to ISO (UTC):", new Date(formData.start).toISOString());
 
                                 if (!formData.person || !formData.start || !formData.end) {
                                     alert("Please fill in all fields.");
