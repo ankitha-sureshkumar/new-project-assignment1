@@ -62,14 +62,25 @@ const styles = {
 };
 
 const Calendar = () => {
+    const toUtcISOString = (localDateTimeString) => {
+  const localDate = new Date(localDateTimeString);
+  const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000);
+  return utcDate.toISOString();
+};
+
     const { user, setUser } = useAuth(); // Access user token from context
     const today = new Date()
     const [calendar, setCalendar] = useState(null);
-    const [events, setEvents] = useState([]);
-    const [startDate, setStartDate] = useState(today.toISOString());
+    // const [events, setEvents] = useState([]);
+    const [startDate, setStartDate] = useState(today.toISOString().split("T")[0]);
     const [formVisible, setFormVisible] = useState(false);
     const [selectedTimeRange, setSelectedTimeRange] = useState(null);
-    const [formData, setFormData] = useState({ person: '', customText: '' });
+    const [formData, setFormData] = useState({
+        person: '',
+        start: '',
+        end: ''
+    });
+    const [events, setEvents] = useState([]);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -78,10 +89,10 @@ const Calendar = () => {
                     headers: { Authorization: `Bearer ${user.token}` },
                 });
                 // Update formData as before
-                setFormData({
+                setFormData(prev => ({
+                    ...prev,
                     person: response.data.name,
-                    customText: '', // or response.data.description if you have it
-                });
+                }));
                 // Update user context with latest role
                 setUser(prev => ({
                     ...prev,
@@ -99,19 +110,19 @@ const Calendar = () => {
         viewType: "Week",
         durationBarVisible: false,
         timeRangeSelectedHandling: "Enabled",
-        onTimeRangeSelected: async args => {
-            /* const modal = await DayPilot.Modal.prompt("Create a new event:", "Event 1");
-             calendar.clearSelection();
-             if (!modal.result) { return; }
-             calendar.events.add({
-               start: args.start,
-               end: args.end,
-               id: DayPilot.guid(),
-               text: modal.result
-             }); */
-            setSelectedTimeRange({ start: args.start, end: args.end });
-            setFormVisible(true);
-        },
+        //  onTimeRangeSelected: async args => {
+        /* const modal = await DayPilot.Modal.prompt("Create a new event:", "Event 1");
+          calendar.clearSelection();
+          if (!modal.result) { return; }
+          calendar.events.add({
+            start: args.start,
+            end: args.end,
+            id: DayPilot.guid(),
+            text: modal.result
+          }); */
+        //    setSelectedTimeRange({ start: args.start, end: args.end });
+        //  setFormVisible(true);
+        // },
         onEventClick: async args => {
             // Only allow edit for certain roles
             if (user && ["manager"].includes(user.role)) {
@@ -181,38 +192,39 @@ const Calendar = () => {
         calendar.events.update(e);
     };
 
-    useEffect(() => {
+    const fetchEvents = async () => {
+        try {
+            const response = await axiosInstance.get('/api/events');
+            const data = response.data;
 
-        const events = [
-            {
-                id: 1,
-                text: "Event 1",
-                start: "2025-10-06T10:30:00",
-                end: "2025-10-06T13:00:00",
-            },
-            {
-                id: 2,
-                text: "Event 2",
-                start: "2025-08-05T09:30:00",
-                end: "2025-08-05T11:30:00",
-                backColor: "#6aa84f",
-            },
-            {
-                id: 3,
-                text: "Event 3",
-                start: "2025-08-04T12:00:00",
-                end: "2025-08-04T15:00:00",
-                backColor: "#f1c232",
-            },
-            {
-                id: 4,
-                text: "Event 4",
-                start: "2025-08-03T11:30:00",
-                end: "2025-08-03T14:30:00",
-                backColor: "#cc4125",
-            },
-        ];
-        setEvents(events);
+            if (!data || data.length === 0) {
+                console.log("No events found.");
+                setEvents([]);
+                return;
+            }
+
+            const mappedEvents = data.map(ev => {
+                // Format to match DayPilot
+                return {
+                    id: ev._id,
+                    text: ev.person || "Untitled Event",
+                    start: ev.start, // remove milliseconds + Z
+                    end: ev.end,
+                    backColor: "#6aa84f" // Optional: add if you want color
+                };
+            });
+
+            console.log("Mapped Events:", mappedEvents); // Check what's being passed
+            setEvents(mappedEvents);
+        } catch (error) {
+            console.error("Failed to fetch events:", error);
+            setEvents([]);
+        }
+    };
+
+
+    useEffect(() => {
+        fetchEvents();
     }, []);
 
     return (
@@ -233,26 +245,61 @@ const Calendar = () => {
                         </label>
 
                         <label style={labelStyle}>
-                            Description:
+                            Start:
                             <input
-                                type="text"
-                                value={formData.customText}
-                                onChange={(e) => setFormData({ ...formData, customText: e.target.value })}
+                                type="datetime-local"
+                                value={formData.start}
+                                onChange={(e) => setFormData({ ...formData, start: e.target.value })}
+                                style={inputStyle}
+                            />
+                        </label>
+
+                        <label style={labelStyle}>
+                            End:
+                            <input
+                                type="datetime-local"
+                                value={formData.end}
+                                onChange={(e) => setFormData({ ...formData, end: e.target.value })}
                                 style={inputStyle}
                             />
                         </label>
 
                         <div style={{ marginTop: '1rem' }}>
-                            <button style={buttonStyle} onClick={() => {
-                                calendar.events.add({
-                                    id: DayPilot.guid(),
-                                    text: `${formData.person}: ${formData.customText}`,
-                                    start: selectedTimeRange.start,
-                                    end: selectedTimeRange.end
-                                });
-                                setFormVisible(false);
-                                setFormData({ person: '', customText: '' });
-                            }}>Create</button>
+                            <button style={buttonStyle} onClick={async () => {
+                                // 🛑 Add this block first
+                                console.log("Person:", formData.person);
+                                console.log("Start:", formData.start);
+                                console.log("End:", formData.end);
+                                console.log("Raw input:", formData.start);
+                                console.log("Converted to ISO (UTC):", new Date(formData.start).toISOString());
+
+                                if (!formData.person || !formData.start || !formData.end) {
+                                    alert("Please fill in all fields.");
+                                    return; // Stop here if validation fails
+                                }
+                                try {
+                                    await axiosInstance.post('/api/events',
+                                        {
+                                            person: formData.person,
+                                            start: toUtcISOString(formData.start),
+                                            end: toUtcISOString(formData.end),
+                                        },
+                                        {
+                                            headers: {
+                                                Authorization: `Bearer ${user.token}`
+                                            }
+                                        }
+                                    );
+
+                                    setFormVisible(false);
+                                    setFormData({ person: '', start: '', end: '' });
+                                    fetchEvents();
+                                } catch (error) {
+                                    alert('Failed to create event. In Roster returns.', console.error());
+                                }
+                            }}>
+                                Create
+                            </button>
 
                             <button style={{ ...buttonStyle, marginLeft: '10px', backgroundColor: '#ccc' }}
                                 onClick={() => setFormVisible(false)}>Cancel</button>
@@ -272,17 +319,29 @@ const Calendar = () => {
                             setStartDate(args.day);
                         }}
                     />
+                    {user && user.role === "manager" && (
+                        <button
+                            style={{ ...buttonStyle, marginBottom: "1rem" }}
+                            onClick={() => setFormVisible(true)}
+                        >
+                            + Create Event
+                        </button>
+                    )}
                 </div>
                 <div style={styles.main}>
-                    <DayPilotCalendar
-                        {...config}
-                        events={events}
-                        startDate={startDate}
-                        controlRef={setCalendar}
-                    />
+                    {events.length > 0 ? (
+                        <DayPilotCalendar
+                            {...config}
+                            events={events}
+                            startDate={startDate}
+                            controlRef={setCalendar}
+                        />
+                    ) : (
+                        <div style={{ padding: "2rem", textAlign: "center", color: "#888" }}>
+                            No shifts to display.
+                        </div>
+                    )}
                 </div>
-
-
             </div>
         </div>
     );
