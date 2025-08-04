@@ -71,16 +71,15 @@ const Calendar = () => {
     const { user, setUser } = useAuth(); // Access user token from context
     const today = new Date()
     const [calendar, setCalendar] = useState(null);
-    // const [events, setEvents] = useState([]);
+    // const [shifts, setshifts] = useState([]);
     const [startDate, setStartDate] = useState(today.toISOString().split("T")[0]);
     const [formVisible, setFormVisible] = useState(false);
-    const [selectedTimeRange, setSelectedTimeRange] = useState(null);
     const [formData, setFormData] = useState({
         person: '',
         start: '',
         end: ''
     });
-    const [events, setEvents] = useState([]);
+    const [shifts, setShifts] = useState([]);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -111,10 +110,10 @@ const Calendar = () => {
         durationBarVisible: false,
         timeRangeSelectedHandling: "Enabled",
         //  onTimeRangeSelected: async args => {
-        /* const modal = await DayPilot.Modal.prompt("Create a new event:", "Event 1");
+        /* const modal = await DayPilot.Modal.prompt("Create a new shift:", "shift 1");
           calendar.clearSelection();
           if (!modal.result) { return; }
-          calendar.events.add({
+          calendar.shifts.add({
             start: args.start,
             end: args.end,
             id: DayPilot.guid(),
@@ -126,9 +125,9 @@ const Calendar = () => {
         onEventClick: async args => {
             // Only allow edit for certain roles
             if (user && ["manager"].includes(user.role)) {
-                await editEvent(args.e);
+                await editShift(args.e);
             } else {
-                alert("You do not have permission to edit events.");
+                alert("You do not have permission to edit shifts.");
             }
         },
         contextMenu: new DayPilot.Menu({
@@ -137,10 +136,10 @@ const Calendar = () => {
                 {
                     text: "Delete",
                     onClick: async args => {
-                        const confirmed = window.confirm("Are you sure you want to delete this event?");
+                        const confirmed = window.confirm("Are you sure you want to delete this shift?");
                         if (!confirmed) return;
 
-                        await deleteEvent(args.source.data.id); // call your new deleteEvent function
+                        await deleteShift(args.source.data.id); // call your new deleteShift function
                     },
                 },
                 {
@@ -149,7 +148,7 @@ const Calendar = () => {
                 {
                     text: "Edit...",
                     onClick: async args => {
-                        await editEvent(args.source);
+                        await editShift(args.source);
                     }
                 }
             ]
@@ -174,9 +173,9 @@ const Calendar = () => {
                     symbol: "icons/daypilot.svg#x-circle",
                     fontColor: "#fff",
                     action: "None",
-                    toolTip: "Delete event",
+                    toolTip: "Delete shift",
                     onClick: async args => {
-                        calendar.events.remove(args.source);
+                        calendar.shifts.remove(args.source);
                     }
                 }
             ];
@@ -184,83 +183,83 @@ const Calendar = () => {
         }
     };
 
-const editEvent = async (e) => {
-  if (!user || user.role !== "manager") {
-    alert("You do not have permission to edit events.");
-    return;
-  }
-
-  const modal = await DayPilot.Modal.prompt("Update name for this event:", e.data.text);
-  if (!modal.result) return;
-
-  try {
-    await axiosInstance.put(`/api/events/${e.data.id}`, {
-      person: modal.result,
-      start: e.data.start,
-      end: e.data.end,
-    }, {
-      headers: {
-        Authorization: `Bearer ${user.token}`
-      }
-    });
-console.log("Updating event ID:", e.data.id);
-    fetchEvents(); // Refresh updated calendar
-  } catch (error) {
-    console.error("Failed to update event:", error);
-    alert("Failed to update event.");
-  }
-};
-
-
-    const deleteEvent = async (eventId) => {
+    const editShift = async (e) => {
         if (!user || user.role !== "manager") {
-            alert("You do not have permission to delete events.");
+            alert("You do not have permission to edit Shifts.");
             return;
         }
+
+        const modal = await DayPilot.Modal.prompt("Update name for this Shift:", e.data.text);
+        if (!modal.result) return;
+
         try {
-            await axiosInstance.delete(`/api/events/${eventId}`, {
-                headers: { Authorization: `Bearer ${user.token}` },
+            await axiosInstance.put(`/api/shifts/${e.data.id}`, {
+                person: modal.result,
+                start: e.data.start,
+                end: e.data.end,
+            }, {
+                headers: {
+                    Authorization: `Bearer ${user.token}`
+                }
             });
-            fetchEvents(); // Refresh events after deletion
+            console.log("Updating shift ID:", e.data.id);
+            fetchShifts(); // Refresh updated calendar
         } catch (error) {
-            console.error("Failed to delete event:", error);
-            alert('Failed to delete event. Please try again.');
+            console.error("Failed to update shift:", error);
+            alert("Failed to update shift.");
         }
     };
 
-    const fetchEvents = async () => {
+
+    const deleteShift = async (shiftId) => {
+        if (!user || user.role !== "manager") {
+            alert("You do not have permission to delete shifts.");
+            return;
+        }
         try {
-            const response = await axiosInstance.get('/api/events');
+            await axiosInstance.delete(`/api/shifts/${shiftId}`, {
+                headers: { Authorization: `Bearer ${user.token}` },
+            });
+            fetchShifts(); // Refresh shifts after deletion
+        } catch (error) {
+            console.error("Failed to delete shift:", error);
+            alert('Failed to delete shift. Please try again.');
+        }
+    };
+
+    const fetchShifts = async () => {
+        try {
+            const response = await axiosInstance.get('/api/shifts');
             const data = response.data;
 
             if (!data || data.length === 0) {
-                console.log("No events found.");
-                setEvents([]);
+                console.log("No shifts found.");
+                setShifts([]);
                 return;
             }
 
-            const mappedEvents = data.map(ev => {
+            const mappedShifts = data.map(ev => {
                 // Format to match DayPilot
                 return {
                     id: ev._id,
-                    text: ev.person || "Untitled Event",
+                    text: ev.person || "Untitled Shift",
                     start: ev.start, // remove milliseconds + Z
                     end: ev.end,
                     backColor: "#6aa84f" // Optional: add if you want color
                 };
             });
 
-            console.log("Mapped Events:", mappedEvents); // Check what's being passed
-            setEvents(mappedEvents);
+            console.log("Mapped Shifts:", mappedShifts); // Check what's being passed
+            setShifts(mappedShifts);
         } catch (error) {
-            console.error("Failed to fetch events:", error);
-            setEvents([]);
+            console.error("Failed to fetch shifts:", error);
+            setShifts([]);
         }
     };
 
 
     useEffect(() => {
-        fetchEvents();
+        fetchShifts();
     }, []);
 
     return (
@@ -268,7 +267,7 @@ console.log("Updating event ID:", e.data.id);
             {formVisible && user && user.role === "manager" && (
                 <div style={overlayStyle}>
                     <div style={modalStyle}>
-                        <h3 style={{ marginBottom: '1rem' }}>Create Event</h3>
+                        <h3 style={{ marginBottom: '1rem' }}>Create Shift</h3>
 
                         <label style={labelStyle}>
                             Person:
@@ -308,7 +307,7 @@ console.log("Updating event ID:", e.data.id);
                                     return; // Stop here if validation fails
                                 }
                                 try {
-                                    await axiosInstance.post('/api/events',
+                                    await axiosInstance.post('/api/shifts',
                                         {
                                             person: formData.person,
                                             start: toUtcISOString(formData.start),
@@ -323,9 +322,9 @@ console.log("Updating event ID:", e.data.id);
 
                                     setFormVisible(false);
                                     setFormData({ person: '', start: '', end: '' });
-                                    fetchEvents();
+                                    fetchShifts();
                                 } catch (error) {
-                                    alert('Failed to create event. In Roster returns.', console.error());
+                                    alert('Failed to create Shift. In Roster returns.', console.error());
                                 }
                             }}>
                                 Create
@@ -354,15 +353,15 @@ console.log("Updating event ID:", e.data.id);
                             style={{ ...buttonStyle, marginBottom: "1rem" }}
                             onClick={() => setFormVisible(true)}
                         >
-                            Create Event
+                            Create Shift
                         </button>
                     )}
                 </div>
                 <div style={styles.main}>
-                    {events.length > 0 ? (
+                    {shifts.length > 0 ? (
                         <DayPilotCalendar
                             {...config}
-                            events={events}
+                            events={shifts}
                             startDate={startDate}
                             controlRef={setCalendar}
                         />
