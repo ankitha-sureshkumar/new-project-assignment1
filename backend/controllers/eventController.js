@@ -40,3 +40,22 @@ exports.getEvents = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch events', error: error.message });
   }
 };
+
+exports.updateEvent = async (req, res) => {
+  const { id } = req.params;
+  const { person, start, end } = req.body;
+
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    event.person = person || event.person;
+    event.start = start || event.start;
+    event.end = end || event.end;
+    const updatedEvent = await event.save();
+    res.json(updatedEvent);
+  } catch (error) {
+    console.error("Update error:", error);
+    res.status(500).json({ message: 'Failed to update event', error: error.message });
+  }
+};

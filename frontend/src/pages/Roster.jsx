@@ -132,6 +132,7 @@ const Calendar = () => {
             }
         },
         contextMenu: new DayPilot.Menu({
+
             items: [
                 {
                     text: "Delete",
@@ -183,17 +184,32 @@ const Calendar = () => {
         }
     };
 
-    const editEvent = async (e) => {
-        // Only allow certain roles to edit
-        if (!user || user.role !== "manager") {
-            alert("You do not have permission to edit events.");
-            return;
-        }
-        const modal = await DayPilot.Modal.prompt("Update event text:", e.text());
-        if (!modal.result) { return; }
-        e.data.text = modal.result;
-        calendar.events.update(e);
-    };
+const editEvent = async (e) => {
+  if (!user || user.role !== "manager") {
+    alert("You do not have permission to edit events.");
+    return;
+  }
+
+  const modal = await DayPilot.Modal.prompt("Update name for this event:", e.data.text);
+  if (!modal.result) return;
+
+  try {
+    await axiosInstance.put(`/api/events/${e.data.id}`, {
+      person: modal.result,
+      start: e.data.start,
+      end: e.data.end,
+    }, {
+      headers: {
+        Authorization: `Bearer ${user.token}`
+      }
+    });
+console.log("Updating event ID:", e.data.id);
+    fetchEvents(); // Refresh updated calendar
+  } catch (error) {
+    console.error("Failed to update event:", error);
+    alert("Failed to update event.");
+  }
+};
 
 
     const deleteEvent = async (eventId) => {
@@ -338,7 +354,7 @@ const Calendar = () => {
                             style={{ ...buttonStyle, marginBottom: "1rem" }}
                             onClick={() => setFormVisible(true)}
                         >
-                            + Create Event
+                            Create Event
                         </button>
                     )}
                 </div>
