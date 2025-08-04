@@ -1,6 +1,7 @@
 import { DayPilot, DayPilotCalendar, DayPilotNavigator } from "@daypilot/daypilot-lite-react";
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import axiosInstance from '../axiosConfig';
 
 
 const overlayStyle = {
@@ -61,7 +62,7 @@ const styles = {
 };
 
 const Calendar = () => {
-    const { user } = useAuth(); // Access user token from context
+    const { user, setUser } = useAuth(); // Access user token from context
     const today = new Date()
     const [calendar, setCalendar] = useState(null);
     const [events, setEvents] = useState([]);
@@ -69,6 +70,30 @@ const Calendar = () => {
     const [formVisible, setFormVisible] = useState(false);
     const [selectedTimeRange, setSelectedTimeRange] = useState(null);
     const [formData, setFormData] = useState({ person: '', customText: '' });
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const response = await axiosInstance.get('/api/auth/profile', {
+                    headers: { Authorization: `Bearer ${user.token}` },
+                });
+                // Update formData as before
+                setFormData({
+                    person: response.data.name,
+                    customText: '', // or response.data.description if you have it
+                });
+                // Update user context with latest role
+                setUser(prev => ({
+                    ...prev,
+                    role: response.data.role,
+                }));
+            } catch (error) {
+                alert('Failed to fetch profile. Please try again.');
+            }
+        };
+
+        if (user && setUser) fetchProfile();
+    }, [user, setUser]);
 
     const config = {
         viewType: "Week",
@@ -146,7 +171,7 @@ const Calendar = () => {
 
     const editEvent = async (e) => {
         // Only allow certain roles to edit
-        if (!user && user.role === "manager") {
+        if (!user || user.role !== "manager") {
             alert("You do not have permission to edit events.");
             return;
         }
@@ -157,6 +182,7 @@ const Calendar = () => {
     };
 
     useEffect(() => {
+
         const events = [
             {
                 id: 1,
