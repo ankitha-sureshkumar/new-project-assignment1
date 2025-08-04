@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
 import Roster from './pages/Roster';
+import LeaveRequests from './pages/LeaveRequests';
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/roster" element={<Roster />} />
+        <Route path="/leave-requests" element={<LeaveRequests />} />
       </Routes>
     </Router>
   );

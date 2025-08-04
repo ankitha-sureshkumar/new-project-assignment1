@@ -15,6 +15,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
 // app.js or server.js
 app.use('/api/shifts', require('./routes/shifts'));
+app.use('/api/leave-requests', require('./routes/leaveRoutes'));
 
 // Export the app object for testing
 if (require.main === module) {
