@@ -1,5 +1,5 @@
 const LeaveRequest = require('../models/LeaveRequests');
-//running this to test the workflow
+
 // Create Leave Request (non-managers only)
 exports.createLeaveRequest = async (req, res) => {
     try {
