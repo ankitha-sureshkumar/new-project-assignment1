@@ -10,6 +10,7 @@ const Tasks = () => {
   const [editingTask, setEditingTask] = useState(null);
 
   useEffect(() => {
+    if (!user || !user.token) return;  // <-- Only run if user and token exist
     const fetchTasks = async () => {
       try {
         const response = await axiosInstance.get('/api/tasks', {

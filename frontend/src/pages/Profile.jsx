@@ -3,11 +3,11 @@ import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 
 const Profile = () => {
-  const { user } = useAuth(); // Access user token from context
+  const { user, setUser } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    university: '',
+    role: '',
     address: '',
   });
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ const Profile = () => {
         setFormData({
           name: response.data.name,
           email: response.data.email,
-          university: response.data.university || '',
+          role: response.data.role || '',
           address: response.data.address || '',
         });
       } catch (error) {
@@ -36,16 +36,25 @@ const Profile = () => {
     if (user) fetchProfile();
   }, [user]);
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axiosInstance.put('/api/auth/profile', formData, {
+      const response = await axiosInstance.put('/api/auth/profile', formData, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
-      alert('Profile updated successfully!');
+      alert(`Profile updated successfully!\n\nName: ${formData.name}\nEmail: ${formData.email}\nRole: ${formData.role}\nAddress: ${formData.address}`);
+      if (response.data.token) {
+        // Save new token and update user context
+        localStorage.setItem('token', response.data.token);
+        setUser({ ...user, role: formData.role, token: response.data.token });
+      } else {
+        setUser({ ...user, role: formData.role });
+      }
     } catch (error) {
       alert('Failed to update profile. Please try again.');
+      console.log(error); // Log the error for debugging
     } finally {
       setLoading(false);
     }
@@ -75,9 +84,9 @@ const Profile = () => {
         />
         <input
           type="text"
-          placeholder="University"
-          value={formData.university}
-          onChange={(e) => setFormData({ ...formData, university: e.target.value })}
+          placeholder="role"
+          value={formData.role}
+          onChange={(e) => setFormData({ ...formData, role: e.target.value })}
           className="w-full mb-4 p-2 border rounded"
         />
         <input
