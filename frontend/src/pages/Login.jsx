@@ -1,3 +1,4 @@
+// // src/pages/Login.jsx
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +14,7 @@ const Login = () => {
     try {
       const response = await axiosInstance.post('/api/auth/login', formData);
       login(response.data);
-      navigate('/tasks');
+      navigate('/pets');
     } catch (error) {
       alert('Login failed. Please try again.');
     }
@@ -29,6 +30,7 @@ const Login = () => {
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           className="w-full mb-4 p-2 border rounded"
+          required
         />
         <input
           type="password"
@@ -36,6 +38,7 @@ const Login = () => {
           value={formData.password}
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           className="w-full mb-4 p-2 border rounded"
+          required
         />
         <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded">
           Login
