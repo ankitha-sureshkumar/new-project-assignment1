@@ -10,7 +10,7 @@ const Register = () => {
     e.preventDefault();
     try {
       await axiosInstance.post('/api/auth/register', formData);
-      alert('Registration successful. Please log in.');
+      alert('Registration successful! Please login.');
       navigate('/login');
     } catch (error) {
       alert('Registration failed. Please try again.');
@@ -27,6 +27,7 @@ const Register = () => {
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           className="w-full mb-4 p-2 border rounded"
+          required
         />
         <input
           type="email"
@@ -34,6 +35,7 @@ const Register = () => {
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           className="w-full mb-4 p-2 border rounded"
+          required
         />
         <input
           type="password"
@@ -41,8 +43,12 @@ const Register = () => {
           value={formData.password}
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           className="w-full mb-4 p-2 border rounded"
+          required
         />
-        <button type="submit" className="w-full bg-green-600 text-white p-2 rounded">
+        <button
+          type="submit"
+          className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"
+        >
           Register
         </button>
       </form>
