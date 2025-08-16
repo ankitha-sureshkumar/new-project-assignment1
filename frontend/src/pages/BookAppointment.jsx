@@ -48,7 +48,7 @@ const BookAppointment = () => {
   useEffect(() => {
     fetchPets();
     fetchAppointments();
-  }, []);
+  }, [fetchAppointments, fetchPets]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
