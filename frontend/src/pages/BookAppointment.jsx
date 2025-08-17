@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
 const API_BASE = "http://localhost:5001/api/clinic";
@@ -9,8 +9,8 @@ const BookAppointment = () => {
   const [pets, setPets] = useState([]);
   const [form, setForm] = useState({
     petId: "",
-    petName: "",   
-    petAge: "",
+    petName: "", // <-- added
+    petAge: "", // <-- added
     date: "",
     hospital: "",
   });
@@ -24,7 +24,16 @@ const BookAppointment = () => {
   ];
 
   // Fetch appointments
-  const fetchAppointments = async () => {
+  // const fetchAppointments = async () => {
+  //   try {
+  //     const headers = { Authorization: `Bearer ${token}` };
+  //     const res = await axios.get(`${API_BASE}/appointments`, { headers });
+  //     setAppointments(res.data);
+  //   } catch (err) {
+  //     console.error("Error fetching appointments:", err);
+  //   }
+  // };
+  const fetchAppointments = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const res = await axios.get(`${API_BASE}/appointments`, { headers });
@@ -32,10 +41,19 @@ const BookAppointment = () => {
     } catch (err) {
       console.error("Error fetching appointments:", err);
     }
-  };
+  }, [token, setAppointments]);
 
   // Fetch pets
-  const fetchPets = async () => {
+  // const fetchPets = async () => {
+  //   try {
+  //     const headers = { Authorization: `Bearer ${token}` };
+  //     const res = await axios.get(`${API_BASE}/pets`, { headers });
+  //     setPets(res.data);
+  //   } catch (err) {
+  //     console.error("Error fetching pets:", err);
+  //   }
+  // };
+  const fetchPets = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const res = await axios.get(`${API_BASE}/pets`, { headers });
@@ -43,12 +61,12 @@ const BookAppointment = () => {
     } catch (err) {
       console.error("Error fetching pets:", err);
     }
-  };
+  }, [token, setPets]);
 
   useEffect(() => {
     fetchPets();
     fetchAppointments();
-  }, []);
+  }, [fetchAppointments, fetchPets]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,7 +93,8 @@ const BookAppointment = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this appointment?")) return;
+    if (!window.confirm("Are you sure you want to delete this appointment?"))
+      return;
     try {
       const headers = { Authorization: `Bearer ${token}` };
       await axios.delete(`${API_BASE}/appointments/${id}`, { headers });
@@ -89,7 +108,10 @@ const BookAppointment = () => {
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">📅 Book an Appointment</h1>
 
-      <form onSubmit={handleSubmit} className="bg-gray-100 p-6 rounded shadow-md mb-8">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-gray-100 p-6 rounded shadow-md mb-8"
+      >
         <select
           value={form.petId}
           onChange={(e) => setForm({ ...form, petId: e.target.value })}
@@ -151,8 +173,12 @@ const BookAppointment = () => {
             <tbody>
               {appointments.map((a) => (
                 <tr key={a._id}>
-                  <td className="border px-4 py-2">{a.petName || a.petId?.name}</td>
-                  <td className="border px-4 py-2">{new Date(a.date).toLocaleDateString()}</td>
+                  <td className="border px-4 py-2">
+                    {a.petName || a.petId?.name}
+                  </td>
+                  <td className="border px-4 py-2">
+                    {new Date(a.date).toLocaleDateString()}
+                  </td>
                   <td className="border px-4 py-2">{a.hospital}</td>
                   <td className="border px-4 py-2">
                     <button
