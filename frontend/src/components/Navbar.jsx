@@ -1,45 +1,106 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Button } from './ui/button';
+import { PawPrint } from './PawPrint';
+import { Bell, User, Settings } from 'lucide-react';
+import { Badge } from './ui/badge';
 
-const Navbar = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+interface NavbarProps {
+  currentPage: string;
+  userType: 'guest' | 'user' | 'veteran';
+  onNavigate: (page: string) => void;
+  notifications?: number;
+}
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
+export function Navbar({ currentPage, userType, onNavigate, notifications = 0 }: NavbarProps) {
+  const isLoggedIn = userType !== 'guest';
+  
   return (
-    <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
-      <Link to="/" className="text-2xl font-bold hover:underline">OGGYY Pet Clinic Mangement</Link>
-      <div>
-        {user ? (
-          <>
-            <Link to="/book-appointment" className="text-1xl font-bold mr-4 hover:underline">Book an Appointment</Link>
-            <Link to="/pets" className="text-1xl font-bold mr-4 hover:underline">Pets</Link>
-            {/* <Link to="/profile" className="text-1xl font-bold mr-4 hover:underline">Profile</Link> */}
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 px-4 py-2 rounded hover:bg-red-700"
-            >
-              Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" className="mr-4">Login</Link>
-            <Link
-              to="/register"
-              className="bg-green-500 px-4 py-2 rounded hover:bg-green-700"
-            >
-              Register
-            </Link>
-          </>
-        )}
+    <nav className="bg-secondary text-secondary-foreground px-6 py-4 shadow-sm">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        {/* Logo */}
+        <div 
+          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={() => onNavigate('home')}
+        >
+          <PawPrint className="text-primary" size="lg" opacity={1} />
+          <div>
+            <h1 className="text-xl font-bold">Oggy's Pet Hospital</h1>
+            <p className="text-xs opacity-75">Caring with Love 🐾</p>
+          </div>
+        </div>
+
+        {/* Navigation Links */}
+        <div className="flex items-center gap-4">
+          {!isLoggedIn ? (
+            <>
+              <Button 
+                variant={currentPage === 'home' ? 'default' : 'ghost'}
+                onClick={() => onNavigate('home')}
+                className="text-secondary-foreground hover:text-primary-foreground"
+              >
+                Home
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => onNavigate('register')}
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                Register
+              </Button>
+              <Button 
+                onClick={() => onNavigate('login')}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                Login
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                variant={currentPage === 'dashboard' ? 'default' : 'ghost'}
+                onClick={() => onNavigate('dashboard')}
+                className="text-secondary-foreground hover:text-primary-foreground"
+              >
+                Dashboard
+              </Button>
+              
+              {/* Notifications */}
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-secondary-foreground hover:text-primary-foreground"
+                >
+                  <Bell className="w-5 h-5" />
+                  {notifications > 0 && (
+                    <Badge className="absolute -top-2 -right-2 px-1 min-w-5 h-5 text-xs bg-accent text-accent-foreground">
+                      {notifications > 9 ? '9+' : notifications}
+                    </Badge>
+                  )}
+                </Button>
+              </div>
+
+              {/* User Menu */}
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-secondary-foreground hover:text-primary-foreground"
+                >
+                  <User className="w-5 h-5" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => onNavigate('home')}
+                  className="text-secondary-foreground hover:text-primary-foreground text-sm"
+                >
+                  Logout
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </nav>
   );
-};
-
-export default Navbar;
+}

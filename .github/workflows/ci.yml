@@ -1,10 +1,10 @@
 name: Backend CI
-
 on:
   push:
-    branches:
-      - main  # Trigger CI on pushes to the main branch
-
+    branches: ['**']      # run on any branch
+  pull_request:
+    branches: ['**']      # and on any PR
+  workflow_dispatch:  
 
 jobs:
   test:
