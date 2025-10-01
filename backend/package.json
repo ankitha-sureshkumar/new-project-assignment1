@@ -8,7 +8,7 @@
     "dev": "nodemon src/server.ts",
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha --require ts-node/register src/tests/**/*.ts",
     "seed:admin": "ts-node src/scripts/createAdmin.ts"
   },
   "keywords": [
@@ -38,11 +38,15 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/chai": "^5.2.2",
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/mocha": "^10.0.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.5.2",
     "@types/uuid": "^10.0.0",
+    "chai": "^6.2.0",
+    "mocha": "^11.7.3",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
