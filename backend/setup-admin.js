@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 // MongoDB connection string from your .env file
-const MONGODB_URI = 'mongodb+srv://ankithasuresh1058:BFLe0DwGv7t1zdfa@projectdatabase.oac6ezr.mongodb.net/oggy?retryWrites=true&w=majority';
+const MONGODB_URI = '';
 
 // Admin schema (simplified version matching your TypeScript model)
 const adminSchema = new mongoose.Schema({
