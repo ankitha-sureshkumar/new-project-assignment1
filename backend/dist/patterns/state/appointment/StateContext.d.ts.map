@@ -1,0 +1,1 @@
+{"version":3,"file":"StateContext.d.ts","sourceRoot":"","sources":["../../../../src/patterns/state/appointment/StateContext.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,MAAM,6BAA6B,CAAC;AAC3D,OAAO,EAAE,gBAAgB,EAAE,MAAM,oBAAoB,CAAC;AAQtD,qBAAa,uBAAuB;IAEtB,OAAO,CAAC,WAAW;IAD/B,OAAO,CAAC,KAAK,CAAmB;gBACZ,WAAW,EAAE,YAAY;IAG7C,OAAO,CAAC,YAAY;IAYpB,QAAQ,IAAI,gBAAgB;CAC7B"}

@@ -1,16 +1,19 @@
 import { Button } from './ui/button';
 import { PawPrint } from './PawPrint';
-import { Bell, User, Settings } from 'lucide-react';
+import { Bell, User, Settings, Shield } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 interface NavbarProps {
   currentPage: string;
-  userType: 'guest' | 'user' | 'veteran';
+  userType: 'guest' | 'user' | 'veterinarian' | 'admin';
   onNavigate: (page: string) => void;
+  onLogout?: () => void;
   notifications?: number;
+  onNotificationsClick?: () => void;
+  onProfileClick?: () => void;
 }
 
-export function Navbar({ currentPage, userType, onNavigate, notifications = 0 }: NavbarProps) {
+export function Navbar({ currentPage, userType, onNavigate, onLogout, notifications = 0, onNotificationsClick, onProfileClick }: NavbarProps) {
   const isLoggedIn = userType !== 'guest';
   
   return (
@@ -30,7 +33,32 @@ export function Navbar({ currentPage, userType, onNavigate, notifications = 0 }:
 
         {/* Navigation Links */}
         <div className="flex items-center gap-4">
-          {!isLoggedIn ? (
+          {userType === 'admin' ? (
+            <>
+              <Button 
+                variant={currentPage === 'admin-dashboard' ? 'default' : 'ghost'}
+                onClick={() => onNavigate('admin-dashboard')}
+                className="text-secondary-foreground hover:text-primary-foreground"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Admin Dashboard
+              </Button>
+              <Button 
+                variant={currentPage === 'admin-users' ? 'default' : 'ghost'}
+                onClick={() => onNavigate('admin-users')}
+                className="text-secondary-foreground hover:text-primary-foreground"
+              >
+                Users
+              </Button>
+              <Button 
+                variant={currentPage === 'admin-veterinarians' ? 'default' : 'ghost'}
+                onClick={() => onNavigate('admin-veterinarians')}
+                className="text-secondary-foreground hover:text-primary-foreground"
+              >
+                Veterinarians
+              </Button>
+            </>
+          ) : !isLoggedIn ? (
             <>
               <Button 
                 variant={currentPage === 'home' ? 'default' : 'ghost'}
@@ -52,6 +80,16 @@ export function Navbar({ currentPage, userType, onNavigate, notifications = 0 }:
               >
                 Login
               </Button>
+              {/* Admin Access for Guests */}
+              <Button 
+                variant="ghost"
+                onClick={() => onNavigate('admin-login')}
+                className="text-muted-foreground hover:text-red-600 border border-red-200 hover:border-red-400 text-xs"
+                size="sm"
+              >
+                <Shield className="w-3 h-3 mr-1" />
+                Admin
+              </Button>
             </>
           ) : (
             <>
@@ -68,6 +106,7 @@ export function Navbar({ currentPage, userType, onNavigate, notifications = 0 }:
                 <Button 
                   variant="ghost" 
                   size="sm"
+                  onClick={onNotificationsClick}
                   className="text-secondary-foreground hover:text-primary-foreground"
                 >
                   <Bell className="w-5 h-5" />
@@ -84,6 +123,7 @@ export function Navbar({ currentPage, userType, onNavigate, notifications = 0 }:
                 <Button 
                   variant="ghost" 
                   size="sm"
+                  onClick={onProfileClick}
                   className="text-secondary-foreground hover:text-primary-foreground"
                 >
                   <User className="w-5 h-5" />
@@ -91,7 +131,7 @@ export function Navbar({ currentPage, userType, onNavigate, notifications = 0 }:
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => onNavigate('home')}
+                  onClick={onLogout || (() => onNavigate('home'))}
                   className="text-secondary-foreground hover:text-primary-foreground text-sm"
                 >
                   Logout

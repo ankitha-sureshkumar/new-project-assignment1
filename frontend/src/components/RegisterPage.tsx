@@ -7,42 +7,204 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { PawBackground, PawPrint } from './PawPrint';
-import { User, Stethoscope, Upload, ArrowLeft } from 'lucide-react';
+import { Footer } from './Footer';
+import { User, Stethoscope, Upload, ArrowLeft, Loader2 } from 'lucide-react';
+import authService from '../services/authService';
+import { User as UserType } from '../types';
 
 interface RegisterPageProps {
   onNavigate: (page: string) => void;
 }
 
 export function RegisterPage({ onNavigate }: RegisterPageProps) {
-  const [step, setStep] = useState<'choose' | 'user' | 'veteran'>('choose');
+  const [step, setStep] = useState<'choose' | 'user' | 'veterinarian'>('choose');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     // Common fields
     name: '',
     email: '',
     password: '',
     contact: '',
-    profilePicture: null as File | null,
     
     // User-specific fields
     address: '',
     petOwnership: '',
     preferredContact: 'email',
     
-    // Veteran-specific fields
+    // Veterinarian-specific fields
     specialization: '',
     experience: '',
-    hospitalsServed: '',
-    availability: [] as string[],
     consultationCostMin: '',
     consultationCostMax: '',
+    hospitalsServed: '',
+    availability: [] as string[],
     certifications: null as File | null,
+    profilePicture: null as File | null,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock registration success
-    alert(`${step === 'user' ? 'User' : 'Veterinarian'} registration successful!`);
-    onNavigate('login');
+    
+    // Basic validation
+    if (!formData.name || !formData.email || !formData.password || !formData.contact) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    // Name validation
+    if (formData.name.length < 2 || formData.name.length > 50) {
+      setError('Name must be between 2 and 50 characters');
+      return;
+    }
+    
+    if (!/^[a-zA-Z\s]+$/.test(formData.name)) {
+      setError('Name can only contain letters and spaces');
+      return;
+    }
+
+    // Password validation
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+    
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      setError('Password must contain at least one lowercase letter, one uppercase letter, and one number');
+      return;
+    }
+
+    // Contact validation - backend expects plain numbers only
+    if (!/^[0-9]{10,15}$/.test(formData.contact.replace(/\s/g, ''))) {
+      setError('Please provide a valid contact number (10-15 digits only, e.g., 5551234567)');
+      return;
+    }
+
+    if (step === 'user' && !formData.address) {
+      setError('Address is required for pet parents');
+      return;
+    }
+
+    if (step === 'veterinarian') {
+      if (!formData.specialization || !formData.experience || !formData.consultationCostMin || !formData.consultationCostMax) {
+        setError('Please fill in all veterinarian details');
+        return;
+      }
+      
+      const minFee = parseFloat(formData.consultationCostMin);
+      const maxFee = parseFloat(formData.consultationCostMax);
+      
+      if (isNaN(minFee) || isNaN(maxFee)) {
+        setError('Consultation fees must be valid numbers');
+        return;
+      }
+      
+      if (minFee < 10) {
+        setError('Minimum consultation fee must be at least $10');
+        return;
+      }
+      
+      if (maxFee <= minFee) {
+        setError('Maximum fee must be greater than minimum fee');
+        return;
+      }
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // Create FormData for file uploads
+      const formDataToSend = new FormData();
+      
+      // Add basic fields
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('password', formData.password);
+      formDataToSend.append('contact', formData.contact);
+
+      if (step === 'user') {
+        // User-specific fields
+        formDataToSend.append('address', formData.address);
+        if (formData.petOwnership) {
+          formDataToSend.append('petOwnership', formData.petOwnership);
+        }
+        if (formData.preferredContact) {
+          formDataToSend.append('preferredContact', formData.preferredContact);
+        }
+        
+        // Add profile picture for user
+        if (formData.profilePicture) {
+          formDataToSend.append('profilePicture', formData.profilePicture);
+        }
+        
+        // Use user registration endpoint
+        await authService.registerUser(formDataToSend);
+        
+      } else if (step === 'veterinarian') {
+        // Veterinarian-specific required fields
+        formDataToSend.append('specialization', formData.specialization);
+        formDataToSend.append('experience', formData.experience);
+        formDataToSend.append('consultationFeeRange[min]', formData.consultationCostMin);
+        formDataToSend.append('consultationFeeRange[max]', formData.consultationCostMax);
+        
+        // Optional veterinarian fields
+        if (formData.hospitalsServed) {
+          formDataToSend.append('hospitalsServed', formData.hospitalsServed);
+        }
+        
+        // Process availability data
+        if (formData.availability && formData.availability.length > 0) {
+          formData.availability.forEach((day, index) => {
+            formDataToSend.append(`availability[${index}]`, day);
+          });
+        }
+        
+        // Add files for veterinarian
+        if (formData.profilePicture) {
+          formDataToSend.append('profilePicture', formData.profilePicture);
+        }
+        
+        if (formData.certifications) {
+          formDataToSend.append('certifications', formData.certifications);
+        }
+        
+        // Use veterinarian registration endpoint
+        await authService.registerVeterinarian(formDataToSend);
+      }
+      
+      // Registration successful - redirect to login
+      alert('Registration successful! Please login with your credentials.');
+      onNavigate('login');
+      
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      
+      let errorMessage = 'Registration failed. Please try again.';
+      
+      if (err.message) {
+        if (err.message.includes('Validation failed')) {
+          // Try to extract specific validation errors
+          try {
+            const response = err.message.match(/"errors":\[(.*?)\]/);
+            if (response) {
+              // This is a rough extraction - the actual error details should come from the API response
+              errorMessage = 'Please check your input data. Common issues: password format, phone number format, or missing required fields.';
+            } else {
+              errorMessage = err.message;
+            }
+          } catch {
+            errorMessage = 'Validation failed. Please check your input data.';
+          }
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleInputChange = (field: string, value: any) => {
@@ -71,7 +233,7 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
           <div className="grid md:grid-cols-2 gap-6">
             <Card 
               className="cursor-pointer hover:shadow-lg transition-all group border-2 hover:border-primary"
-              onClick={() => setStep('user')}
+              onClick={() => { setStep('user'); setError(''); }}
             >
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto mb-4 p-4 bg-primary/10 rounded-full w-fit group-hover:bg-primary/20 transition-colors">
@@ -94,7 +256,7 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
 
             <Card 
               className="cursor-pointer hover:shadow-lg transition-all group border-2 hover:border-primary"
-              onClick={() => setStep('veteran')}
+              onClick={() => { setStep('veterinarian'); setError(''); }}
             >
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto mb-4 p-4 bg-secondary/10 rounded-full w-fit group-hover:bg-secondary/20 transition-colors">
@@ -116,6 +278,8 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
             </Card>
           </div>
         </div>
+        
+        <Footer onNavigate={onNavigate} />
       </PawBackground>
     );
   }
@@ -150,6 +314,12 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
                 : 'Join our professional network to serve pet families'
               }
             </CardDescription>
+            
+            {error && (
+              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+                {error}
+              </div>
+            )}
           </CardHeader>
           
           <CardContent>
@@ -190,16 +360,28 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
                     placeholder="Create a password"
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Must be at least 6 characters with uppercase, lowercase, and number
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="contact">Contact Number *</Label>
                   <Input
                     id="contact"
+                    type="tel"
                     value={formData.contact}
-                    onChange={(e) => handleInputChange('contact', e.target.value)}
-                    placeholder="(555) 123-4567"
+                    onChange={(e) => {
+                      // Only allow digits
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      handleInputChange('contact', value);
+                    }}
+                    placeholder="5551234567"
+                    maxLength={15}
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Enter digits only (10-15 digits, e.g., 5551234567)
+                  </p>
                 </div>
               </div>
 
@@ -207,13 +389,14 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
               {step === 'user' && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="address">Address *</Label>
                     <Textarea
                       id="address"
                       value={formData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
                       placeholder="Enter your address"
                       className="min-h-20"
+                      required
                     />
                   </div>
 
@@ -251,8 +434,8 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
                 </>
               )}
 
-              {/* Veteran-specific Fields */}
-              {step === 'veteran' && (
+              {/* Veterinarian-specific Fields */}
+              {step === 'veterinarian' && (
                 <>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -262,12 +445,13 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
                           <SelectValue placeholder="Select specialization" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="general">General Practice</SelectItem>
-                          <SelectItem value="surgery">Surgery</SelectItem>
-                          <SelectItem value="dermatology">Dermatology</SelectItem>
-                          <SelectItem value="cardiology">Cardiology</SelectItem>
-                          <SelectItem value="orthopedics">Orthopedics</SelectItem>
-                          <SelectItem value="emergency">Emergency Medicine</SelectItem>
+                          <SelectItem value="General Practice">General Practice</SelectItem>
+                          <SelectItem value="Surgery">Surgery</SelectItem>
+                          <SelectItem value="Dermatology">Dermatology</SelectItem>
+                          <SelectItem value="Cardiology">Cardiology</SelectItem>
+                          <SelectItem value="Orthopedics">Orthopedics</SelectItem>
+                          <SelectItem value="Emergency Care">Emergency Care</SelectItem>
+                          <SelectItem value="Dental Care">Dental Care</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -318,23 +502,26 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="consultationCostMin">Min Consultation Cost ($)</Label>
+                      <Label htmlFor="consultationCostMin">Min Consultation Cost ($) *</Label>
                       <Input
                         id="consultationCostMin"
                         type="number"
                         value={formData.consultationCostMin}
                         onChange={(e) => handleInputChange('consultationCostMin', e.target.value)}
                         placeholder="50"
+                        min="10"
+                        required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="consultationCostMax">Max Consultation Cost ($)</Label>
+                      <Label htmlFor="consultationCostMax">Max Consultation Cost ($) *</Label>
                       <Input
                         id="consultationCostMax"
                         type="number"
                         value={formData.consultationCostMax}
                         onChange={(e) => handleInputChange('consultationCostMax', e.target.value)}
                         placeholder="150"
+                        required
                       />
                     </div>
                   </div>
@@ -390,14 +577,29 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                Complete Registration
-                <PawPrint className="ml-2" size="sm" opacity={1} />
+              <Button 
+                type="submit" 
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Registering...
+                  </>
+                ) : (
+                  <>
+                    Complete Registration
+                    <PawPrint className="ml-2" size="sm" opacity={1} />
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>
         </Card>
       </div>
+      
+      <Footer onNavigate={onNavigate} />
     </PawBackground>
   );
 }

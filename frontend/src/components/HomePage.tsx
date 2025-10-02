@@ -2,7 +2,8 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { PawBackground, PawPrint } from './PawPrint';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { Heart, Shield, Clock, Users, Star, Phone, MapPin, Mail } from 'lucide-react';
+import { Footer } from './Footer';
+import { Heart, Shield, Clock, Users, Star } from 'lucide-react';
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
@@ -41,19 +42,25 @@ export function HomePage({ onNavigate }: HomePageProps) {
       name: "Sarah Johnson",
       pet: "Golden Retriever - Max",
       rating: 5,
-      comment: "The care Max received was exceptional. Dr. Smith was so gentle and thorough!"
+      comment: "The care Max received was exceptional. Dr. Smith was so gentle and thorough!",
+      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b665?w=150&h=150&fit=crop&crop=face&auto=format",
+      petImage: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=60&h=60&fit=crop&crop=face&auto=format"
     },
     {
       name: "Mike Chen",
       pet: "Persian Cat - Luna",
       rating: 5,
-      comment: "Best veterinary clinic in town! Luna loves coming here for her checkups."
+      comment: "Best veterinary clinic in town! Luna loves coming here for her checkups.",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&auto=format",
+      petImage: "https://images.unsplash.com/photo-1513245543132-31f507417b26?w=60&h=60&fit=crop&crop=face&auto=format"
     },
     {
       name: "Emily Davis",
       pet: "Beagle - Charlie",
       rating: 5,
-      comment: "Professional, caring, and affordable. Highly recommend Oggy's Pet Hospital!"
+      comment: "Professional, caring, and affordable. Highly recommend Oggy's Pet Hospital!",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face&auto=format",
+      petImage: "https://images.unsplash.com/photo-1551717743-49959800b1f6?w=60&h=60&fit=crop&crop=face&auto=format"
     }
   ];
 
@@ -157,92 +164,50 @@ export function HomePage({ onNavigate }: HomePageProps) {
           
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="relative">
-                <CardHeader>
-                  <div className="flex items-center gap-1 mb-2">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-accent text-accent" />
-                    ))}
+              <Card key={index} className="relative overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <CardHeader className="pb-4">
+                  <div className="flex items-start gap-4">
+                    <div className="relative">
+                      <ImageWithFallback
+                        src={testimonial.avatar}
+                        alt={`${testimonial.name}'s profile picture`}
+                        className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                      />
+                      <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 border border-gray-200">
+                        <ImageWithFallback
+                          src={testimonial.petImage}
+                          alt={testimonial.pet}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1 mb-2">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-accent text-accent" />
+                        ))}
+                      </div>
+                      <CardTitle className="text-lg font-semibold">{testimonial.name}</CardTitle>
+                      <CardDescription className="text-sm text-primary font-medium">
+                        {testimonial.pet}
+                      </CardDescription>
+                    </div>
                   </div>
-                  <CardTitle className="text-lg">{testimonial.name}</CardTitle>
-                  <CardDescription className="text-sm text-primary">
-                    {testimonial.pet}
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-foreground italic">"{testimonial.comment}"</p>
+                  <p className="text-foreground italic leading-relaxed">
+                    "{testimonial.comment}"
+                  </p>
                 </CardContent>
-                <PawPrint className="absolute top-4 right-4 text-primary" size="sm" opacity={0.1} />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+                <PawPrint className="absolute bottom-4 right-4 text-primary" size="sm" opacity={0.1} />
               </Card>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-secondary text-secondary-foreground py-16 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="col-span-2">
-              <div className="flex items-center gap-3 mb-4">
-                <PawPrint className="text-primary" size="lg" opacity={1} />
-                <h3 className="text-xl font-bold">Oggy's Pet Hospital</h3>
-              </div>
-              <p className="text-secondary-foreground/80 mb-4">
-                Providing exceptional veterinary care with love, compassion, and expertise since 2020.
-              </p>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="w-4 h-4" />
-                  <span>(555) 123-PETS</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="w-4 h-4" />
-                  <span>care@oggypethospital.com</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="w-4 h-4" />
-                  <span>123 Pet Care Lane, Animal City, AC 12345</span>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
-              <div className="space-y-2 text-sm">
-                <p className="cursor-pointer hover:text-primary transition-colors">About Us</p>
-                <p className="cursor-pointer hover:text-primary transition-colors">Services</p>
-                <p className="cursor-pointer hover:text-primary transition-colors">Emergency Care</p>
-                <p className="cursor-pointer hover:text-primary transition-colors">Contact</p>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">For Pet Parents</h4>
-              <div className="space-y-2 text-sm">
-                <p 
-                  className="cursor-pointer hover:text-primary transition-colors"
-                  onClick={() => onNavigate('register')}
-                >
-                  Register
-                </p>
-                <p 
-                  className="cursor-pointer hover:text-primary transition-colors"
-                  onClick={() => onNavigate('login')}
-                >
-                  Login
-                </p>
-                <p className="cursor-pointer hover:text-primary transition-colors">Pet Care Tips</p>
-                <p className="cursor-pointer hover:text-primary transition-colors">FAQ</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t border-secondary-foreground/20 mt-12 pt-8 text-center text-sm">
-            <p>&copy; 2025 Oggy's Pet Hospital. All rights reserved. Made with ❤️ for pets and their families.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer onNavigate={onNavigate} />
     </PawBackground>
   );
 }

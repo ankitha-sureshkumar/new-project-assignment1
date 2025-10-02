@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Pet API</title>
+</head>
+<body>
+    <h1>Pet API Test</h1>
+    <div>
+        <h2>1. Test Authentication</h2>
+        <button onclick="testAuth()">Test Auth</button>
+        <div id="auth-result"></div>
+    </div>
+    
+    <div>
+        <h2>2. Create Pet</h2>
+        <button onclick="testCreatePet()">Create Test Pet</button>
+        <div id="create-result"></div>
+    </div>
+    
+    <div>
+        <h2>3. Get Pets</h2>
+        <button onclick="testGetPets()">Get Pets</button>
+        <div id="get-result"></div>
+    </div>
+
+    <script>
+        // Mock token for testing - you'll need to replace this with a real token
+        const mockToken = 'your-test-token-here';
+        
+        async function testAuth() {
+            const result = document.getElementById('auth-result');
+            result.innerHTML = 'Testing authentication...';
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'testpass'
+                    })
+                });
+                
+                const data = await response.json();
+                result.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                result.innerHTML = `Error: ${error.message}`;
+            }
+        }
+        
+        async function testCreatePet() {
+            const result = document.getElementById('create-result');
+            result.innerHTML = 'Creating pet...';
+            
+            const petData = {
+                name: 'Test Pet',
+                type: 'Dog',
+                breed: 'Golden Retriever',
+                age: '2 years',
+                weight: 25.5,
+                gender: 'Male',
+                color: 'Golden',
+                medicalHistory: 'No medical history',
+                vaccinations: 'Up to date',
+                allergies: ['None']
+            };
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/pets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${mockToken}`
+                    },
+                    body: JSON.stringify(petData)
+                });
+                
+                const data = await response.json();
+                result.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                result.innerHTML = `Error: ${error.message}`;
+            }
+        }
+        
+        async function testGetPets() {
+            const result = document.getElementById('get-result');
+            result.innerHTML = 'Getting pets...';
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/pets', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${mockToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                result.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                result.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

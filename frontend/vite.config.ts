@@ -56,5 +56,12 @@
     server: {
       port: 3000,
       open: true,
+      historyApiFallback: true,
+      host: true
     },
+    preview: {
+      port: 3000,
+      historyApiFallback: true,
+      host: true
+    }
   });

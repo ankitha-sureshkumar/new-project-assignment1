@@ -4,28 +4,59 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { PawBackground, PawPrint } from './PawPrint';
-import { User, Stethoscope, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Footer } from './Footer';
+import { User, Stethoscope, ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
+import authService from '../services/authService';
+import { User as UserType } from '../types';
 
 interface LoginPageProps {
   onNavigate: (page: string) => void;
-  onLogin: (userType: 'user' | 'veteran') => void;
+  onLogin: (user: UserType) => void;
 }
 
 export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
-  const [step, setStep] = useState<'choose' | 'user' | 'veteran'>('choose');
+  const [step, setStep] = useState<'choose' | 'user' | 'veterinarian'>('choose');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login validation
-    if (formData.email && formData.password) {
-      onLogin(step as 'user' | 'veteran');
-    } else {
-      alert('Please fill in all fields');
+    
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      let response: any;
+      
+      if (step === 'user') {
+        response = await authService.loginUser({
+          email: formData.email,
+          password: formData.password
+        });
+      } else if (step === 'veterinarian') {
+        response = await authService.loginVeterinarian({
+          email: formData.email,
+          password: formData.password
+        });
+      }
+
+      if (response) {
+        onLogin(response.user);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,7 +86,7 @@ export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
           <div className="grid md:grid-cols-2 gap-6">
             <Card 
               className="cursor-pointer hover:shadow-lg transition-all group border-2 hover:border-primary"
-              onClick={() => setStep('user')}
+              onClick={() => { setStep('user'); setError(''); }}
             >
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto mb-4 p-4 bg-primary/10 rounded-full w-fit group-hover:bg-primary/20 transition-colors">
@@ -78,7 +109,7 @@ export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
 
             <Card 
               className="cursor-pointer hover:shadow-lg transition-all group border-2 hover:border-primary"
-              onClick={() => setStep('veteran')}
+              onClick={() => { setStep('veterinarian'); setError(''); }}
             >
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto mb-4 p-4 bg-secondary/10 rounded-full w-fit group-hover:bg-secondary/20 transition-colors">
@@ -112,6 +143,8 @@ export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
             </p>
           </div>
         </div>
+        
+        <Footer onNavigate={onNavigate} />
       </PawBackground>
     );
   }
@@ -121,7 +154,7 @@ export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
       <div className="max-w-md mx-auto">
         <Button 
           variant="ghost" 
-          onClick={() => setStep('choose')}
+          onClick={() => { setStep('choose'); setError(''); }}
           className="mb-8 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -146,6 +179,12 @@ export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
                 : 'Access your professional veterinary dashboard'
               }
             </CardDescription>
+            
+            {error && (
+              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+                {error}
+              </div>
+            )}
           </CardHeader>
           
           <CardContent>
@@ -199,9 +238,18 @@ export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
                 </button>
               </div>
 
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                Sign In
-                <PawPrint className="ml-2" size="sm" opacity={1} />
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Signing In...
+                  </>
+                ) : (
+                  <>
+                    Sign In
+                    <PawPrint className="ml-2" size="sm" opacity={1} />
+                  </>
+                )}
               </Button>
             </form>
 
@@ -219,17 +267,9 @@ export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
           </CardContent>
         </Card>
 
-        {/* Demo credentials */}
-        <Card className="mt-6 bg-muted/50">
-          <CardContent className="pt-6">
-            <h4 className="font-medium text-sm mb-3">Demo Credentials:</h4>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p><strong>Pet Parent:</strong> user@demo.com / password123</p>
-              <p><strong>Veterinarian:</strong> vet@demo.com / password123</p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
+      
+      <Footer onNavigate={onNavigate} />
     </PawBackground>
   );
 }
