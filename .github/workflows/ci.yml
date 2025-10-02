@@ -1,124 +1,80 @@
-name: Node.js and Vite CI
+name: Backend CI
 
 on:
   push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
-  workflow_dispatch:
+    branches:
+      - main  # Trigger CI on pushes to the main branch
 
-permissions:
-  contents: read
-  pages: write           # for GitHub Pages deploy
-  id-token: write        # for GitHub Pages deploy
 
 jobs:
-  backend:
-    runs-on: ubuntu-latest
+  test:
+    name: Run Tests
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        node-version: [22] # Test on multiple Node.js versions
+
+
+    environment: MONGO_URI
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
+    # Set up Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies
-        working-directory: ./backend
-        run: |
-          npm ci || npm install
+    - name: Print Env Secret
 
-      - name: List files in backend
-        working-directory: ./backend
-        run: ls -la
+      env:
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        PORT: ${{ secrets.PORT }}
+      run: | 
+        echo "Secret 1 is: $MONGO_URI"
+        echo "Secret 2 is: $JWT_SECRET"
+        echo "Secret 3 is: $PORT"
+      
+    - run: pm2 stop all
 
-      - name: Build backend
-        working-directory: ./backend
-        run: npm run build --if-present
+    # Install dependencies for backend
+    - name: Install Backend Dependencies
+      working-directory: ./backend
+      run: | 
+       npm install --global yarn
+       yarn --version
+       yarn install
+      
+    # Install dependencies for frontend
+    - name: Install Frontend Dependencies
+      working-directory: ./frontend
+      run: |
+        df -h
+        sudo rm -rf ./build
+        yarn install
+        yarn run build
 
-      - name: Test backend
-        working-directory: ./backend
-        env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          CI: true
-        run: npm test
 
-  frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    # Run backend tests
+    - name: Run Backend Tests
+      env:
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        PORT: ${{ secrets.PORT }}
+      working-directory: ./backend
+      run: npm test
 
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
-        working-directory: ./frontend
-        run: |
-          npm ci || npm install
+    - run: npm ci
+    - run: | 
+        cd ./backend
+        touch .env
+        echo "${{ secrets.PROD }}" > .env
 
-      - name: List files in frontend
-        working-directory: ./frontend
-        run: ls -la
+    - run: pm2 start all
 
-      - name: Build frontend
-        working-directory: ./frontend
-        env:
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-          CI: true
-        run: npm run build
-
-      # Upload site bundle for Pages
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: frontend/dist
-
-  # --- CD: Deploy Frontend to GitHub Pages ---
-  deploy_frontend:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: frontend
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-  # --- CD (optional): Deploy Backend to EC2 over SSH ---
-  # Requires repo secrets: SSH_HOST, SSH_USER, SSH_KEY, APP_DIR
-  # Assumes your server already has the repo cloned at $APP_DIR and PM2 installed.
-  deploy_backend_ec2:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: backend
-    runs-on: ubuntu-latest
-    steps:
-      - name: SSH deploy to EC2 (git pull, install, restart)
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script_stop: true
-          script: |
-            set -e
-            cd "$APP_DIR"
-            git fetch --all
-            git reset --hard origin/main
-            cd backend
-            npm ci --omit=dev || npm install --production
-            # Export env for your process manager or .env on the box
-            export MONGODB_URI="${{ secrets.MONGODB_URI }}"
-            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
-            # Restart app (adjust if you use systemd instead of pm2)
-            pm2 restart oggy-backend || pm2 start "npm -- start" --name oggy-backend
+    - run: pm2 restart all
