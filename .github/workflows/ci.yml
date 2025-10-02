@@ -9,9 +9,6 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -20,10 +17,16 @@ jobs:
       with:
         node-version: 20
     - name: Install dependencies
+      working-directory: ./backend
       run: npm install
-    - name: Build
+    - name: List files in backend
+      working-directory: ./backend
+      run: ls -la
+    - name: Build backend
+      working-directory: ./backend
       run: npm run build
-    - name: Test
+    - name: Test backend
+      working-directory: ./backend
       run: npm test
       env:
         MONGODB_URI: ${{ secrets.MONGODB_URI }}
@@ -31,9 +34,6 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -42,8 +42,13 @@ jobs:
       with:
         node-version: 20
     - name: Install dependencies
+      working-directory: ./frontend
       run: npm install
-    - name: Build
+    - name: List files in frontend
+      working-directory: ./frontend
+      run: ls -la
+    - name: Build frontend
+      working-directory: ./frontend
       run: npm run build
       env:
         VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
