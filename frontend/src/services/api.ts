@@ -3,14 +3,12 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://3.106.59.219:5000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://3.106.59.219:5000/api/',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
-});
-
-
+})
 // Request interceptor to add auth token - Simple approach like admin
 api.interceptors.request.use(
   (config) => {
