@@ -1,0 +1,246 @@
+{
+	"info": {
+		"_postman_id": "725d058d-838b-4fac-b172-ae6f5a191e71",
+		"name": "Oggy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "47565249",
+		"_collection_link": "https://ankithasuresh1058-1946253.postman.co/workspace/ANKITHA-SURESH's-Workspace~4ed69899-1784-4010-87a2-bedf95e7e12f/collection/47565249-725d058d-838b-4fac-b172-ae6f5a191e71?action=share&source=collection_link&creator=47565249"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"John Doe\",\r\n    \"email\": \"john.doe@example.com\",\r\n    \"password\": \"Password123\",\r\n    \"contact\": \"1234567890\",\r\n    \"address\": \"123 Main Street, Anytown, USA\",\r\n    \"role\": \"user\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5001/api/auth/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"api",
+						"auth",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"john.doe@example.com\",\r\n  \"password\": \"Password123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5001/api/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGRkNGM5M2U0MjE1MTgwYjkzNWYwYzMiLCJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NTk0OTE0NjEsImV4cCI6MTc2MDA5NjI2MSwiYXVkIjoib2dneS1wZXQtaG9zcGl0YWwtdXNlcnMiLCJpc3MiOiJvZ2d5LXBldC1ob3NwaXRhbCJ9.9Q-o5K-XUuJEF0lLPm27YfEW0Ie69B8JNcUQTHvOLAw",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Summer\",\r\n    \"type\": \"Dog\",\r\n    \"breed\": \"Lab\",\r\n    \"age\": 4,\r\n    \"gender\": \"Male\",\r\n    \"medicalHistory\": \"Up to date on all vaccinations.\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5001/api/pets",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"api",
+						"pets"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGRkNGM5M2U0MjE1MTgwYjkzNWYwYzMiLCJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NTk0OTE0NjEsImV4cCI6MTc2MDA5NjI2MSwiYXVkIjoib2dneS1wZXQtaG9zcGl0YWwtdXNlcnMiLCJpc3MiOiJvZ2d5LXBldC1ob3NwaXRhbCJ9.9Q-o5K-XUuJEF0lLPm27YfEW0Ie69B8JNcUQTHvOLAw",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://localhost:5001/api/pets",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"api",
+						"pets"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Jane Smith\",\r\n  \"email\": \"jane.smith@example.com\",\r\n  \"password\": \"Password456\",\r\n  \"contact\": \"5551234567\",\r\n  \"address\": \"123 Main Street, Anytown, USA\",\r\n  \"role\": \"veterinarian\",\r\n  \"specialization\": \"Surgery\",\r\n  \"experience\": \"10 years\",\r\n  \"consultationFeeRange\": { \"min\": 100, \"max\": 300 }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5001/api/auth/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"api",
+						"auth",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"veterinarianId\": \"\",\r\n    \"petId\": \"68dfb5de8ff1b768024d9cd9\",\r\n    \"appointmentDate\": \"2025-12-25T10:00:00.000Z\",\r\n    \"reason\": \"Annual check-up for my pet\"\r\n}\r\n\r\n"
+				},
+				"url": {
+					"raw": "http://localhost:5001/api/appointments",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"api",
+						"appointments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGRkNGM5M2U0MjE1MTgwYjkzNWYwYzMiLCJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NTk0OTE0NjEsImV4cCI6MTc2MDA5NjI2MSwiYXVkIjoib2dneS1wZXQtaG9zcGl0YWwtdXNlcnMiLCJpc3MiOiJvZ2d5LXBldC1ob3NwaXRhbCJ9.9Q-o5K-XUuJEF0lLPm27YfEW0Ie69B8JNcUQTHvOLAw",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"John A. Doe\",\r\n    \"contact\": \"9876543210\"\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5001/api/auth/profile",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"api",
+						"auth",
+						"profile"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
