@@ -3,7 +3,7 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://13.60.17.143:5001/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://3.106.59.219:5000/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
