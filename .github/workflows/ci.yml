@@ -1,0 +1,73 @@
+name: Node.js CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  backend:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Run backend tests
+        working-directory: ./backend
+        run: npm test
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      - name: Stop existing PM2 backend
+        run: pm2 stop backend || true
+
+      - name: Create Production .env File
+        working-directory: ./backend
+        run: echo "${{ secrets.PROD }}" > .env
+
+      - name: Start backend with PM2
+        working-directory: ./backend
+        run: pm2 start "npm run start" --name="backend" || pm2 restart backend
+
+      - name: Save PM2 Config
+        run: pm2 save
+
+  frontend:
+    runs-on: self-hosted
+    needs: backend   # ensures backend job completes first
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Stop existing PM2 frontend
+        run: pm2 stop frontend || true
+
+      - name: Serve frontend with PM2
+        run: pm2 serve ./frontend/build 3000 --name="frontend" --spa || pm2 restart frontend
+
+      - name: Save PM2 Config
+        run: pm2 save
